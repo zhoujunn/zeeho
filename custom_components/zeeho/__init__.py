@@ -98,15 +98,12 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 async def async_setup_entry(hass, config_entry) -> bool:
     """Set up autoamap as config entry."""
     global varstinydict
-    #user_id = config_entry.data[CONF_USER_ID]
     Authorization = config_entry.data[CONF_Authorization]
     Cfmoto_X_Sign = config_entry.data[CONF_Cfmoto_X_Sign]
     Cfmoto_X_Param =  config_entry.data[CONF_Cfmoto_X_Param]
     Appid = config_entry.data[CONF_Appid]
     Nonce = config_entry.data[CONF_Nonce]
     Signature = config_entry.data[CONF_Signature]
-    #api_key = config_entry.data[CONF_API_KEY]
-    #paramadata = config_entry.data[CONF_PARAMDATA]
     xuhao = config_entry.data[CONF_XUHAO]
     update_interval_seconds = config_entry.options.get(CONF_UPDATE_INTERVAL, 90)
     attr_show = config_entry.options.get(CONF_ATTR_SHOW, True)
@@ -145,22 +142,16 @@ async def async_setup_entry(hass, config_entry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    # 使用 async_forward_entry_setups 一次性设置所有平台
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    # 使用 async_unload_platforms 一次性卸载所有平台
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
@@ -169,6 +160,7 @@ async def async_unload_entry(hass, config_entry):
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
 
 
 async def update_listener(hass, config_entry):
