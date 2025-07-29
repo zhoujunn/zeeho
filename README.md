@@ -10,6 +10,8 @@ New features in version 2024
 support Integration UI, Devices
 
 通过集成配置
+V 2025.7.29
+
 
 V2024.9.1
 更新获取传感器信息
