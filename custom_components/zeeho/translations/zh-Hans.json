@@ -1,186 +1,22 @@
 {
-    "config": {
-        "title": "极核",
-        "step": {
-            "user": {
-                "title": "极核",
-                "description": "如果您需要配置方面的帮助，请查看此处: https://github.com/zhoujunn/zeeho",
-                "data": {
-                    "name": "名称",
-					"Authorization": "Authorization",
-                    "Cfmoto_X_Sign": "Cfmoto-X-Sign",                   
-					"Cfmoto_X_Param": "Cfmoto-X-Param",
-					"Appid": "Appid",
-					"Nonce": "Nonce",
-					"Signature": "Signature",
-					"xuhao": "序号，一般为0，如果有多个电动车，支持多个。"
-                }
-            }
-        },
-        "error": {
-            "communication": "错误请重新配置"
-        },
-        "abort": {
-            "single_instance_allowed": "仅允许单个配置.",
-            "already_configured": "请勿重复配置."
+  "config": {
+    "step": {
+      "user": {
+        "title": "添加 Zeeho 车辆",
+        "description": "请输入 Zeeho API 的 Token 和 车辆 VIN。",
+        "data": {
+          "token": "访问 Token",
+          "vin": "车辆 VIN",
+          "vehicle_name":"车辆名称"
         }
+      }
     },
-	"options": {
-        "step": {
-            "user":{
-                "data": {                    
-                    "attr_show": "属性中显示停车时间等更多信息，但会不断刷新实体的“上次更新”时间",
-					"gps_conver": "原始数据为GCJ02(火星坐标系)，坐标转化为GPS84",
-					"update_interval_seconds": "更新间隔时间(10-3600秒),建议设为90",
-					"sensors": "传感器",
-                    "addressapi": "地址获取接口，使用 API 前请您先注册: [高德账号web服务key](https://lbs.amap.com/dev/key) , [百度账号服务端AK](https://lbsyun.baidu.com/apiconsole/key)  , [腾讯WebServiceAPI Key](https://lbs.qq.com/dev/console/application/mine) 。",
-                    "api_key": "接口密钥，除免api_key接口外，为空时不获取地址",
-                    "private_key": "数字签名时填写，否则留空。高德为安全密钥的私钥值，百度为sn校验方式SK值，腾讯为签名校验SK。"
-                },
-                "description": "更多可选设置"
-            }
-        }
+    "error": {
+      "auth": "认证失败，请检查 Token 或 VIN。",
+      "cannot_connect": "无法连接到服务器。"
     },
-	"selector": {
-		"sensors": {
-			"options": {
-				"bmssoc" : "车辆电量",
-				"locationTime" : "上次停车时间",
-				"chargeState" : "充电状态",
-				"headLockState" : "车锁状态"
-			}
-		},
-        "addressapi": {
-			"options": {
-                "none": "不获取地址",
-                "free": "免api_key获取基础地理信息",
-				"gaode": "高德地图逆地理接口",
-				"baidu": "百度地图逆地理接口",
-				"tencent": "腾讯地图逆地理接口"
-			}
-		}
-	},
-	"entity": {
-		"device_tracker": {
-			"zeeho_device_tracker": {
-				"state_attributes": {
-					"device_model":{
-					 "name": "车辆品牌"
-					},
-					"vehicleName": {
-					  "name": "车辆名称"
-					},
-					"vehiclePicUrl": {
-					  "name": "车辆照片"
-					},
-					"bmssoc": {
-					  "name": "车辆电量"
-					},
-					"bluetoothAddress": {
-					  "name": "蓝牙地址"
-					},
-					"fullChargeTime": {
-					  "name": "充满时间"
-					},
-					"otaVersion": {
-					  "name": "ota版本"
-					},
-					"rideState": {
-						"name": "车辆在线"
-					  },
-					"chargeState": {
-						"name": "充电状态"
-					  },
-					"headLockState": {
-						"name": "车锁状态"
-					  },
-					"supportNetworkUnlock": {
-					  "name": "支持网络解锁"
-					},					
-					"totalRideMile": {
-					  "name": "总骑行里程"
-					},
-					"supportUnlock": {
-					  "name": "支持解锁"
-					},
-					"whetherChargeState": {
-					  "name": "是否充电状态"
-					},
-					"locationTime": {
-					  "name": "上次停车时间"
-					},
-					"latitude": {
-					  "name": "纬度"
-					},
-					"longitude": {
-					  "name": "经度"
-					},
-					"altitude": {
-						"name": "高度"
-					  },
-                    "map_gcj_lat": {
-					  "name": "高德地图纬度"
-					},
-					"map_gcj_lng": {
-					  "name": "高德地图经度"
-					},
-                    "map_bd_lat": {
-					  "name": "百度地图纬度"
-					},
-					"map_bd_lng": {
-					  "name": "百度地图经度"
-					},
-					"Querytime": {
-					  "name": "查询时间"
-					},
-					"Address": {
-					  "name": "地址"
-					},
-					"source_type": {
-					  "name": "数据源",
-					  "state": {
-						"bluetooth_le": "低功耗蓝牙",
-						"bluetooth": "蓝牙",
-						"gps": "GPS定位",
-						"router": "路由器"
-					  }
-					}
-			    }
-			}
-		},
-		"sensor": {
-			"bmssoc": {
-				"name": "车辆电量",
-				"state_attributes": {
-					"querytime": {
-					  "name": "查询时间"
-					}
-				}
-			},
-			"chargeState": {
-				"name": "充电状态",
-				"state_attributes": {
-					"querytime": {
-					  "name": "查询时间"
-					}
-				}
-			},
-			"headLockState": {
-				"name": "车锁状态",
-				"state_attributes": {
-					"querytime": {
-					  "name": "查询时间"
-					}
-				}
-			},
-			"locationTime": {
-				"name": "上次停车时间",
-				"state_attributes": {
-					"querytime": {
-					  "name": "查询时间"
-					}
-				}
-			}
-	    }
-	}
+    "abort": {
+      "already_configured": "该车辆已经配置过了。"
+    }
+  }
 }
