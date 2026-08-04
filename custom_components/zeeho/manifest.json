@@ -1,14 +1,16 @@
 {
-  "domain": "zeeho",
-  "name": "zeeho",
-  "codeowners": ["@zhoujuun"],
-  "config_flow": true,
-  "dependencies": [],
-  "documentation": "https://github.com/zhoujunn/zeeho",  
-  "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/zhoujunn/zeeho/issues",  
-  "requirements": ["requests"],
-  "version": "2025.9.23"
+    "domain": "zeeho",
+    "name": "zeeho",
+    "codeowners": [
+        "@zhoujunn"
+    ],
+    "config_flow": true,
+    "dependencies": [],
+    "documentation": "https://github.com/zhoujunn/zeeho",
+    "iot_class": "cloud_polling",
+    "issue_tracker": "https://github.com/zhoujunn/zeeho/issues",
+    "requirements": [
+        "requests"
+    ],
+    "version": "2026.8.4"
 }
-
-

@@ -93,7 +93,8 @@ class ZeehoDeviceTracker(CoordinatorEntity, TrackerEntity):
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, self._vin)},
-            "name": f"Zeeho {self._vehicle_name}",
-            "manufacturer": "CFMOTO",
+            "name": "ZEEHO",
+            "manufacturer": "ZEEHO",
             "model": self.coordinator.data.get("vehicleName", "Unknown"),
+            "configuration_url": "https://github.com/zhoujunn/zeeho",
         }
