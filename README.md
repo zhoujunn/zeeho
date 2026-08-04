@@ -1,41 +1,68 @@
-# 极核
+# Zeeho（极核）Home Assistant 集成
 
+将极核（ZEEHO）电动车接入 Home Assistant，实时获取车辆电量、续航、车锁状态、地址与定位。
 
+## 功能
 
-极核 for homeassistant
-V2025.9.23
-更新来自小组件,token和车架号，以及自定义车辆名就OK。
-只有车辆电量，续航，车锁，地址四个sensor，定位依然存在。
-token是Authorization的值不需要添加Bearer。
+- **4 个传感器（sensor）**：
+  - 车辆电量（%）
+  - 续航里程（km）
+  - 车锁状态（已锁 / 未锁）
+  - 车辆地址（部分情况下 API 返回空，属正常现象）
+- **1 个设备追踪器（device_tracker）**：车辆实时定位（API 返回 GCJ-02 坐标系，集成已自动转换为 WGS-84）
+- 数据每分钟自动刷新
 
-New features in version 2024
+## 安装
 
-support Integration UI, Devices
+### 方法一：HACS（推荐）
 
-通过集成配置
+1. HACS → 右上角菜单 → **自定义存储库**
+2. 仓库地址填 `https://github.com/zhoujunn/zeeho`，类别选择 **Integration**
+3. 添加后搜索 **Zeeho** 并下载
+4. 重启 Home Assistant
 
-V2024.9.1
-更新获取传感器信息
-sensor
+### 方法二：手动安装
 
+1. 下载 `zeeho-2026.8.4.zip` 并解压
+2. 将 `zeeho` 文件夹复制到 Home Assistant 的 `custom_components/` 目录下
+3. 重启 Home Assistant
 
+## 配置
 
+设置 → 设备与服务 → 添加集成 → 搜索 **Zeeho**。
 
-V2024.8.31
-需要用手机抓包拿到的几个数据，zeeho，
-进行抓包https://tapi.zeehoev.com/v1.0/app/cfmotoserverapp/vehicleHomePage
+| 配置项 | 说明 |
+|---|---|
+| 访问 Token | 极核 App 接口请求头 `Authorization` 的值（**不要**带 `Bearer` 前缀，集成会自动加上） |
+| 车辆 VIN | 车架号，例如 `358122400025036` |
+| 车辆名称 | 自定义名称（可选，留空则使用 API 返回的车辆名） |
 
-Authorization
-Cfmoto-X-Sign
-Cfmoto-X-Param
-Appid
-Nonce
-Signature
+> **Token 获取方式**：抓取极核 App 的 API 请求，取请求头 `Authorization` 中 `Bearer` 后面的值。
+> 旧版抓包所需的 `Cfmoto-X-Sign` / `Cfmoto-X-Param` / `Appid` / `Nonce` / `Signature` 等签名头，在新版 API 中**不再需要**，只需 Token + VIN 即可。
 
+API 域名：`https://tapi.zeehoev.com`
 
-此版本请使用homeassistant 2023.4以后的版本
+## v2026.8.4 更新说明
 
+- 错误处理优化：token 失效（HTTP 401/403）时日志会明确提示「token 可能失效，请重新配置」；网络/DNS 异常也会明确提示
+- 配置流程优化：连通性测试可区分「认证失败」与「无法连接」；同一 VIN 不允许重复添加；Token / VIN 自动去除首尾空格
+- 电量、续航改为数值类型（API 原返回字符串），便于自动化与图表使用；补充设备类别与图标
+- 修复资源释放：卸载集成时正确关闭 HTTP 会话
+- 新增 README 与 CHANGELOG
 
-参考：高德地图车机版
-https://github.com/dscao/autoamap
-感谢：dscao
+## 注意事项
+
+- Token 即极核账号的访问凭证，请勿公开分享（Token 保存在 HA 配置存储 `.storage` 中，不会写入日志）
+- 若实体显示不可用，先查看日志：
+  - `认证失败：token 可能已失效` → 重新抓取 Token，删除集成后重新添加
+  - `网络错误：无法连接 Zeeho API` → 检查服务器网络 / DNS 是否能解析 `tapi.zeehoev.com`
+- 车辆地址字段（address）部分情况下 API 返回空，此时地址传感器显示「未知」
+- 轮询间隔固定为 1 分钟，避免对官方 API 造成压力
+
+## 更新日志
+
+见 [CHANGELOG.md](CHANGELOG.md)
+
+## 参考项目
+
+- [dscao/autoamap](https://github.com/dscao/autoamap)（高德车机集成，坐标转换参考）
