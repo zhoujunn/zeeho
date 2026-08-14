@@ -52,6 +52,8 @@
 
 API 域名：`https://tapi.zeehoev.com`
 
+首页、电池信息等接口除 Token 外还要 App 签名头（`appId` / `nonce` / `timestamp` / `Cfmoto-X-Sign`）。集成会按极核 App 的 type-0 算法现算，无需再从抓包里抄签名。
+
 ## 寻车
 
 - **短按寻车**：`PUT /v1.0/app/cfmotoserverapp/vehicleInfo/control/{vin}`，空 body

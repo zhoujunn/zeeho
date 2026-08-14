@@ -22,6 +22,15 @@ PATH_VEHICLE_LIST = "/v1.0/app/cfmotoserverapp/vehicle/list"
 PATH_FIND_CAR = "/v1.0/app/cfmotoserverapp/vehicleInfo/control/{vin}"
 PATH_LOUD_FIND = "/v1.0/app/cfmotoserverapp/vehicleInfo/controlV2"
 
+# App 客户端签名（Cfmoto-X-Sign-Type=0）。secret 写在官方 App / 公开脚本里。
+APP_ID = "S7qPWPU1"
+APP_SECRET = "c5e0da7f4da28df805694ec3dd1fc6792e9df99d"
+APP_USER_AGENT = (
+    "MOBILE|iOS|27.0|ZEEHO_APP|2.6.26|iPhone|iPhone 16 Pro|"
+    "1206*2622|homeassistant|WiFi|iOS"
+)
+INTERFACE_VERSION = "2"
+
 # 不要写入实体属性的敏感字段
 REDACT_KEYS = {
     "encryptInfo",

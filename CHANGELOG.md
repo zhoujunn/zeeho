@@ -1,5 +1,11 @@
 # 更新日志
 
+## [2026.8.14.1] - 2026-08-14
+
+### 修复
+
+- **HTTP 430 permit error**：`vehicleHomePage` / `batteryInfo` 等接口会校验 `Cfmoto-X-Sign`。少签名是 `30124`，签名过期/算错是 `30123`。现按 App 规则每次请求现算 `md5(sha1(query+body+appId&nonce&timestamp+appSecret))`。
+
 ## [2026.8.14] - 2026-08-14
 
 本版本为 [zhoujunn/zeeho](https://github.com/zhoujunn/zeeho) 的 fork 增强版。旧配置条目可直接替换升级，原 4 个 sensor + 1 个 device_tracker 的 `unique_id` 不变。
