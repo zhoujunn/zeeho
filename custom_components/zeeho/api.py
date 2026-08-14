@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import logging
@@ -11,6 +12,8 @@ from typing import Any
 from urllib.parse import parse_qsl, quote, urlparse
 
 import aiohttp
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from .const import (
     API_HOST,
@@ -18,14 +21,21 @@ from .const import (
     APP_ID,
     APP_SECRET,
     APP_USER_AGENT,
+    COMMOND_OPEN_CUSHION,
     INTERFACE_VERSION,
     PATH_BATTERY,
     PATH_FIND_CAR,
     PATH_HOMEPAGE,
     PATH_LOUD_FIND,
+    PATH_PROPERTY_TWO,
+    PATH_SIGNIN,
+    PATH_SIGNIN_COUNT,
+    PATH_TIRE,
+    PATH_UNLOCK,
     PATH_VEHICLE_LIST,
     PATH_WIDGETS,
     REQUEST_TIMEOUT,
+    UNLOCK_AES_KEY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,6 +116,7 @@ class ZeehoApi:
         *,
         json_body: Any | None = None,
         empty_body: bool = False,
+        sign_body: str | None = None,
     ) -> Any:
         url = f"{API_HOST}{path}"
         body = ""
@@ -115,13 +126,14 @@ class ZeehoApi:
         elif json_body is not None:
             body = json.dumps(json_body, ensure_ascii=False, separators=(",", ":"))
             data = body.encode("utf-8")
+        signed = body if sign_body is None else sign_body
 
         timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT)
         try:
             async with self._session.request(
                 method,
                 url,
-                headers=self._headers(path, body),
+                headers=self._headers(path, signed),
                 data=data,
                 timeout=timeout,
             ) as resp:
@@ -192,3 +204,55 @@ class ZeehoApi:
             PATH_LOUD_FIND,
             json_body={"param": "4", "vin": vin},
         )
+
+    async def async_get_tire(self, vin: str) -> dict[str, Any]:
+        data = await self._request("GET", f"{PATH_TIRE}?vinNo={vin}")
+        return data if isinstance(data, dict) else {}
+
+    async def async_network_lock(self, vin: str, lock_flag: int) -> Any:
+        """云端开关锁。lock_flag 1=开锁，0=关锁。"""
+        plain = json.dumps(
+            {"lockFlag": int(lock_flag), "vinNo": vin},
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        secret = _encrypt_unlock_secret(plain)
+        return await self._request(
+            "POST",
+            PATH_UNLOCK,
+            json_body={"secret": secret},
+            sign_body=plain,
+        )
+
+    async def async_set_property_two(
+        self, vin: str, commond: str, commond_param: str = "1"
+    ) -> Any:
+        """整车属性下发。开坐垫走 commond=28。"""
+        return await self._request(
+            "PUT",
+            PATH_PROPERTY_TWO,
+            json_body={
+                "commond": str(commond),
+                "commondParam": commond_param,
+                "vcu": vin,
+                "version": "v2",
+            },
+        )
+
+    async def async_open_cushion(self, vin: str) -> Any:
+        return await self.async_set_property_two(vin, COMMOND_OPEN_CUSHION, "1")
+
+    async def async_get_signin(self) -> dict[str, Any]:
+        data = await self._request("GET", PATH_SIGNIN_COUNT)
+        return data if isinstance(data, dict) else {}
+
+    async def async_signin(self) -> Any:
+        return await self._request("POST", PATH_SIGNIN, empty_body=True)
+
+
+def _encrypt_unlock_secret(plaintext: str) -> str:
+    padder = padding.PKCS7(128).padder()
+    padded = padder.update(plaintext.encode("utf-8")) + padder.finalize()
+    encryptor = Cipher(algorithms.AES(UNLOCK_AES_KEY), modes.ECB()).encryptor()
+    raw = encryptor.update(padded) + encryptor.finalize()
+    return base64.b64encode(raw).decode("ascii").replace("\n", "").replace("\r", "")

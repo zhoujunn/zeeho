@@ -57,3 +57,34 @@ def vehicle_lock_attrs(data: dict[str, Any] | None) -> dict[str, Any]:
 
 def safe_attrs(mapping: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in mapping.items() if key not in REDACT_KEYS}
+
+
+def tire_warning_label(value: Any) -> str | None:
+    if value is None or value == "":
+        return None
+    try:
+        code = int(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if code == 0:
+        return "正常"
+    if code == -1:
+        return "无数据"
+    return f"告警({code})"
+
+
+def tire_extra(data: dict[str, Any], prefix: str) -> dict[str, Any]:
+    attrs: dict[str, Any] = {}
+    warning = data.get(f"{prefix}TireWarning")
+    if warning is not None:
+        attrs["warning_type"] = warning
+        label = tire_warning_label(warning)
+        if label:
+            attrs["warning"] = label
+    report = data.get(f"{prefix}TireReportTime")
+    if report:
+        attrs["report_time"] = report
+    updated = data.get("tireUpdateTime")
+    if updated:
+        attrs["update_time"] = updated
+    return attrs

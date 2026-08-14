@@ -1,4 +1,4 @@
-"""Zeeho 寻车按钮。"""
+"""Zeeho 寻车 / 开坐垫 / 签到按钮。"""
 
 from __future__ import annotations
 
@@ -18,9 +18,18 @@ from .helpers import device_info
 _LOGGER = logging.getLogger(__name__)
 
 
+def _cushion_available(data: dict[str, Any]) -> bool:
+    return data.get("openCushionFlag") is not False
+
+
+def _signin_available(data: dict[str, Any]) -> bool:
+    return str(data.get("signStatus")) != "1"
+
+
 @dataclass(kw_only=True)
 class ZeehoButtonDescription(ButtonEntityDescription):
     press_fn: Callable[[Any, str], Coroutine[Any, Any, Any]]
+    available_fn: Callable[[dict[str, Any]], bool] | None = None
 
 
 BUTTONS: tuple[ZeehoButtonDescription, ...] = (
@@ -35,6 +44,20 @@ BUTTONS: tuple[ZeehoButtonDescription, ...] = (
         name="高声寻车",
         icon="mdi:bullhorn",
         press_fn=lambda api, vin: api.async_loud_find_car(vin),
+    ),
+    ZeehoButtonDescription(
+        key="open_cushion",
+        name="开坐垫",
+        icon="mdi:car-seat",
+        press_fn=lambda api, vin: api.async_open_cushion(vin),
+        available_fn=_cushion_available,
+    ),
+    ZeehoButtonDescription(
+        key="signin",
+        name="每日签到",
+        icon="mdi:calendar-check",
+        press_fn=lambda api, vin: api.async_signin(),
+        available_fn=_signin_available,
     ),
 )
 
@@ -67,12 +90,20 @@ class ZeehoButton(CoordinatorEntity, ButtonEntity):
     def device_info(self):
         return device_info(self.coordinator, self._vin, self._vehicle_name)
 
+    @property
+    def available(self) -> bool:
+        if not super().available:
+            return False
+        if self.entity_description.available_fn is None:
+            return True
+        return self.entity_description.available_fn(self.coordinator.data or {})
+
     async def async_press(self) -> None:
         try:
             await self.entity_description.press_fn(self.coordinator.api, self._vin)
         except ZeehoAuthError as err:
             raise HomeAssistantError(str(err)) from err
         except ZeehoApiError as err:
-            _LOGGER.warning("寻车失败：%s", err)
+            _LOGGER.warning("%s失败：%s", self.entity_description.name, err)
             raise HomeAssistantError(str(err)) from err
         await self.coordinator.async_request_refresh()

@@ -18,13 +18,15 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfLength,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfSpeed,
+    UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_VEHICLE_NAME, CONF_VIN, DOMAIN
-from .helpers import device_info, to_number, vehicle_lock_attrs, vehicle_lock_value
+from .helpers import device_info, tire_extra, to_number, vehicle_lock_attrs, vehicle_lock_value
 
 
 def _map_lock(value: Any) -> str:
@@ -178,6 +180,61 @@ SENSORS: tuple[ZeehoSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: to_number(data.get("current")),
+    ),
+    ZeehoSensorDescription(
+        key="front_tire_pressure",
+        name="前胎压",
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        icon="mdi:car-tire-alert",
+        value_fn=lambda data: to_number(data.get("frontTirePressure")),
+        extra_fn=lambda data: tire_extra(data, "front"),
+    ),
+    ZeehoSensorDescription(
+        key="rear_tire_pressure",
+        name="后胎压",
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        icon="mdi:car-tire-alert",
+        value_fn=lambda data: to_number(data.get("rearTirePressure")),
+        extra_fn=lambda data: tire_extra(data, "rear"),
+    ),
+    ZeehoSensorDescription(
+        key="front_tire_temp",
+        name="前胎温",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: to_number(data.get("frontTireTemp")),
+        extra_fn=lambda data: tire_extra(data, "front"),
+    ),
+    ZeehoSensorDescription(
+        key="rear_tire_temp",
+        name="后胎温",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: to_number(data.get("rearTireTemp")),
+        extra_fn=lambda data: tire_extra(data, "rear"),
+    ),
+    ZeehoSensorDescription(
+        key="signin_count",
+        name="签到天数",
+        icon="mdi:calendar-star",
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=0,
+        value_fn=lambda data: to_number(data.get("signCount")),
+        extra_fn=lambda data: {
+            key: data[key]
+            for key in ("signStatus", "signCount")
+            if key in data and data[key] is not None
+        },
     ),
 )
 

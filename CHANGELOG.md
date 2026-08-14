@@ -1,5 +1,21 @@
 # 更新日志
 
+## [2026.8.15] - 2026-08-15
+
+在 Token + VIN 下补齐官方 App 已核实的云端操作和遥测。旧实体 `unique_id` 不变。
+
+### 新增
+
+- **云端车锁**：`lock` 实体，开锁 / 关锁走 `POST /vehicleSet/network/unlock`。明文 `{"lockFlag":1|0,"vinNo":...}` 用 AES-256-ECB 加密进 `secret`，签名签明文
+- **胎压**：前/后胎压（bar）、前/后胎温。`GET /app/vehicle/tire/monitoring?vinNo=`（不要带 `sensorType`，带了会 430 / 30121）
+- **开坐垫**：`PUT /vehicleSet/propertyTwo/one`，`commond=28`。首页 `openCushionFlag=false` 时按钮不可用
+- **每日签到**：`POST /signin`；`GET /signin/count` 出「签到天数」和「今日已签到」。当天已签则按钮不可用
+
+### 说明
+
+- 开储物箱 / VCU 锁仍只有蓝牙 `serviceCode`，没有可下发的 4G `commond`
+- 不要用「整车锁定 / `VehicleLock_S`」判断开关锁成败，以 `headLockState` 为准
+
 ## [2026.8.14.2] - 2026-08-14
 
 ### 变更

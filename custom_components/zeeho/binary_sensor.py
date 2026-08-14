@@ -1,4 +1,4 @@
-"""Zeeho 二进制传感器：充电中、在线。"""
+"""Zeeho 二进制传感器：充电中、在线、今日已签到。"""
 
 from __future__ import annotations
 
@@ -63,6 +63,19 @@ BINARY_SENSORS: tuple[ZeehoBinaryDescription, ...] = (
             key: data[key]
             for key in ("onlineStatus", "rideState")
             if key in data
+        },
+    ),
+    ZeehoBinaryDescription(
+        key="signed_in",
+        name="今日已签到",
+        icon="mdi:calendar-check",
+        value_fn=lambda data: (
+            None if data.get("signStatus") is None else str(data.get("signStatus")) == "1"
+        ),
+        extra_fn=lambda data: {
+            key: data[key]
+            for key in ("signStatus", "signCount")
+            if key in data and data[key] is not None
         },
     ),
 )
