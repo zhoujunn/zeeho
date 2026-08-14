@@ -1,5 +1,56 @@
 # 更新日志
 
+## [2026.8.15] - 2026-08-15
+
+在 Token + VIN 下补齐官方 App 已核实的云端操作和遥测。旧实体 `unique_id` 不变。
+
+### 新增
+
+- **云端车锁**：`lock` 实体，开锁 / 关锁走 `POST /vehicleSet/network/unlock`。明文 `{"lockFlag":1|0,"vinNo":...}` 用 AES-256-ECB 加密进 `secret`，签名签明文
+- **胎压**：前/后胎压（bar）、前/后胎温。`GET /app/vehicle/tire/monitoring?vinNo=`（不要带 `sensorType`，带了会 430 / 30121）
+- **开坐垫**：`PUT /vehicleSet/propertyTwo/one`，`commond=28`。首页 `openCushionFlag=false` 时按钮不可用
+- **每日签到**：`POST /signin`；`GET /signin/count` 出「签到天数」和「今日已签到」。当天已签则按钮不可用
+
+### 说明
+
+- 开储物箱 / VCU 锁仍只有蓝牙 `serviceCode`，没有可下发的 4G `commond`
+- 不要用「整车锁定 / `VehicleLock_S`」判断开关锁成败，以 `headLockState` 为准
+
+## [2026.8.14.2] - 2026-08-14
+
+### 变更
+
+- 「电源模式 / 上电 / 下电」改回普通用户能看懂的 **车锁 / 已锁 / 未锁**（`headLockState`：`1` 已锁，`0` 未锁）
+- 「整车锁定」默认关闭。它是另一路 IoT 字段 `VehicleLock_S`，App 云端解锁后也不一定变，容易和车锁打架
+
+## [2026.8.14.1] - 2026-08-14
+
+### 修复
+
+- **HTTP 430 permit error**：`vehicleHomePage` / `batteryInfo` 等接口会校验 `Cfmoto-X-Sign`。少签名是 `30124`，签名过期/算错是 `30123`。现按 App 规则每次请求现算 `md5(sha1(query+body+appId&nonce&timestamp+appSecret))`。
+
+## [2026.8.14] - 2026-08-14
+
+本版本为 [zhoujunn/zeeho](https://github.com/zhoujunn/zeeho) 的 fork 增强版。旧配置条目可直接替换升级，原 4 个 sensor + 1 个 device_tracker 的 `unique_id` 不变。
+
+### 新增
+
+- **云端寻车按钮**：短按寻车、高声寻车（只需 Token + VIN）
+- **首页遥测**：充电中、在线、整车锁定、座垫锁、总里程、本月里程 / 时长 / 均速、蜂窝信号、联网服务到期
+- **充电电参**：功率、电压、电流（来自 `batteryInfo`，失败不影响其它实体）
+- **配置流**：粘贴 Token 后自动拉车辆列表；多车时选择；支持选项页和重新认证更新 Token
+- **数据源**：`vehicleHomePage` 为主，`widgets` 只补地址
+
+### 变更
+
+- 原「车锁」显示名改为「电源模式」，取值 `上电` / `下电`（对应 IoT「车辆电源模式」）
+- HTTP 会话改为使用 Home Assistant 共享 `aiohttp` 客户端，卸载时不再自建/自关 session
+- 去掉对 `requests` 的依赖
+
+### 不做
+
+- 云端解锁 / 上锁、开坐垫 / 储物箱、每日签到按钮（抓包或算法不足）
+
 ## [2026.8.4] - 2026-08-04
 
 ### 修复与优化
