@@ -3,11 +3,31 @@
     "step": {
       "user": {
         "title": "添加 Zeeho 车辆",
-        "description": "请输入 Zeeho API 的 Token 和 车辆 VIN。",
+        "description": "填入极核 App 请求头 Authorization 中 Bearer 后面的 Token。不要带 Bearer 前缀。",
         "data": {
-          "token": "访问 Token",
+          "token": "访问 Token"
+        }
+      },
+      "pick_vehicle": {
+        "title": "选择车辆",
+        "description": "该账号下有多辆车，请选择要接入的车辆。",
+        "data": {
+          "vin": "车辆"
+        }
+      },
+      "manual": {
+        "title": "手动填写车辆",
+        "description": "未能自动列出车辆，请手动填写 VIN。",
+        "data": {
           "vin": "车辆 VIN",
-          "vehicle_name":"车辆名称"
+          "vehicle_name": "车辆名称"
+        }
+      },
+      "reauth_confirm": {
+        "title": "重新认证 Zeeho",
+        "description": "Token 已失效，请粘贴新的访问 Token。",
+        "data": {
+          "token": "访问 Token"
         }
       }
     },
@@ -16,7 +36,24 @@
       "cannot_connect": "无法连接到服务器。"
     },
     "abort": {
-      "already_configured": "该车辆已经配置过了。"
+      "already_configured": "该车辆已经配置过了。",
+      "reauth_successful": "Token 已更新。",
+      "unknown": "无法完成重新认证。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "更新 Zeeho Token",
+        "description": "只需更新 Token，不必删除集成。",
+        "data": {
+          "token": "访问 Token"
+        }
+      }
+    },
+    "error": {
+      "auth": "认证失败，请检查 Token。",
+      "cannot_connect": "无法连接到服务器。"
     }
   }
 }

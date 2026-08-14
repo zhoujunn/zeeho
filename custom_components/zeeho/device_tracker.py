@@ -1,14 +1,19 @@
-import logging
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from .const import DOMAIN, CONF_VIN
+"""Zeeho 设备追踪器。API 坐标为 GCJ-02，转换为 WGS-84。"""
+
+from __future__ import annotations
+
 import math
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import CONF_VEHICLE_NAME, CONF_VIN, DOMAIN
+from .helpers import device_info
 
 PI = math.pi
 A = 6378245.0
 EE = 0.00669342162296594323
+
 
 def gcj02_to_wgs84(lng, lat):
     if out_of_china(lng, lat):
@@ -21,32 +26,47 @@ def gcj02_to_wgs84(lng, lat):
     sqrtmagic = math.sqrt(magic)
     dlat = (dlat * 180.0) / ((A * (1 - EE)) / (magic * sqrtmagic) * PI)
     dlng = (dlng * 180.0) / (A / sqrtmagic * math.cos(radlat) * PI)
-    wgs_lat = lat - dlat
-    wgs_lng = lng - dlng
-    return wgs_lng, wgs_lat
+    return lng - dlng, lat - dlat
+
 
 def _transform_lat(x, y):
-    ret = -100.0 + 2.0*x + 3.0*y + 0.2*y*y + 0.1*x*y + 0.2*math.sqrt(abs(x))
-    ret += (20.0*math.sin(6.0*x*PI) + 20.0*math.sin(2.0*x*PI)) * 2.0 / 3.0
-    ret += (20.0*math.sin(y*PI) + 40.0*math.sin(y/3.0*PI)) * 2.0 / 3.0
-    ret += (160.0*math.sin(y/12.0*PI) + 320.0*math.sin(y*PI/30.0)) * 2.0 / 3.0
+    ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * math.sqrt(abs(x))
+    ret += (20.0 * math.sin(6.0 * x * PI) + 20.0 * math.sin(2.0 * x * PI)) * 2.0 / 3.0
+    ret += (20.0 * math.sin(y * PI) + 40.0 * math.sin(y / 3.0 * PI)) * 2.0 / 3.0
+    ret += (160.0 * math.sin(y / 12.0 * PI) + 320.0 * math.sin(y * PI / 30.0)) * 2.0 / 3.0
     return ret
 
+
 def _transform_lng(x, y):
-    ret = 300.0 + x + 2.0*y + 0.1*x*x + 0.1*x*y + 0.1*math.sqrt(abs(x))
-    ret += (20.0*math.sin(6.0*x*PI) + 20.0*math.sin(2.0*x*PI)) * 2.0 / 3.0
-    ret += (20.0*math.sin(x*PI) + 40.0*math.sin(x/3.0*PI)) * 2.0 / 3.0
-    ret += (150.0*math.sin(x/12.0*PI) + 300.0*math.sin(x/30.0*PI)) * 2.0 / 3.0
+    ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * math.sqrt(abs(x))
+    ret += (20.0 * math.sin(6.0 * x * PI) + 20.0 * math.sin(2.0 * x * PI)) * 2.0 / 3.0
+    ret += (20.0 * math.sin(x * PI) + 40.0 * math.sin(x / 3.0 * PI)) * 2.0 / 3.0
+    ret += (150.0 * math.sin(x / 12.0 * PI) + 300.0 * math.sin(x / 30.0 * PI)) * 2.0 / 3.0
     return ret
+
 
 def out_of_china(lng, lat):
     return not (72.004 <= lng <= 137.8347 and 0.8293 <= lat <= 55.8271)
 
+
+def _wgs_coords(data: dict):
+    loc = (data or {}).get("location") or {}
+    if loc.get("latitude") is None or loc.get("longitude") is None:
+        return None
+    try:
+        lng = float(loc["longitude"])
+        lat = float(loc["latitude"])
+    except (TypeError, ValueError):
+        return None
+    return gcj02_to_wgs84(lng, lat)
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     vin = entry.data[CONF_VIN]
-    vehicle_name = entry.data.get("vehicle_name", vin)
+    vehicle_name = entry.data.get(CONF_VEHICLE_NAME, vin)
     async_add_entities([ZeehoDeviceTracker(coordinator, vin, vehicle_name)])
+
 
 class ZeehoDeviceTracker(CoordinatorEntity, TrackerEntity):
     def __init__(self, coordinator, vin, vehicle_name):
@@ -58,19 +78,13 @@ class ZeehoDeviceTracker(CoordinatorEntity, TrackerEntity):
 
     @property
     def latitude(self):
-        loc = self.coordinator.data.get("location", {})
-        if loc.get("latitude") is not None and loc.get("longitude") is not None:
-            lng, lat = gcj02_to_wgs84(loc["longitude"], loc["latitude"])
-            return lat
-        return None
+        coords = _wgs_coords(self.coordinator.data)
+        return None if coords is None else coords[1]
 
     @property
     def longitude(self):
-        loc = self.coordinator.data.get("location", {})
-        if loc.get("latitude") is not None and loc.get("longitude") is not None:
-            lng, lat = gcj02_to_wgs84(loc["longitude"], loc["latitude"])
-            return lng
-        return None
+        coords = _wgs_coords(self.coordinator.data)
+        return None if coords is None else coords[0]
 
     @property
     def location_accuracy(self):
@@ -82,7 +96,7 @@ class ZeehoDeviceTracker(CoordinatorEntity, TrackerEntity):
 
     @property
     def extra_state_attributes(self):
-        loc = self.coordinator.data.get("location", {})
+        loc = (self.coordinator.data or {}).get("location") or {}
         return {
             "altitude": loc.get("altitude"),
             "location_time": loc.get("locationTime"),
@@ -91,10 +105,4 @@ class ZeehoDeviceTracker(CoordinatorEntity, TrackerEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._vin)},
-            "name": "ZEEHO",
-            "manufacturer": "ZEEHO",
-            "model": self.coordinator.data.get("vehicleName", "Unknown"),
-            "configuration_url": "https://github.com/zhoujunn/zeeho",
-        }
+        return device_info(self.coordinator, self._vin, self._vehicle_name)
