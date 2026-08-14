@@ -27,16 +27,7 @@ from .const import CONF_VEHICLE_NAME, CONF_VIN, DOMAIN
 from .helpers import device_info, to_number, vehicle_lock_attrs, vehicle_lock_value
 
 
-def _map_power_mode(value: Any) -> str:
-    state = None if value is None else str(value)
-    if state == "1":
-        return "上电"
-    if state == "0":
-        return "下电"
-    return "未知"
-
-
-def _map_seat_lock(value: Any) -> str:
+def _map_lock(value: Any) -> str:
     state = None if value is None else str(value)
     if state == "1":
         return "已锁"
@@ -73,11 +64,14 @@ SENSORS: tuple[ZeehoSensorDescription, ...] = (
         legacy_unique_suffix="range",
     ),
     ZeehoSensorDescription(
-        key="power_mode",
-        name="电源模式",
-        icon="mdi:power",
-        value_fn=lambda data: _map_power_mode(data.get("headLockState")),
-        extra_fn=lambda data: {"raw": data.get("headLockState"), "iot_name": "车辆电源模式"},
+        key="lock",
+        name="车锁",
+        icon="mdi:lock",
+        value_fn=lambda data: _map_lock(data.get("headLockState")),
+        extra_fn=lambda data: {
+            "raw": data.get("headLockState"),
+            "iot_name": "车辆电源模式",
+        },
         legacy_unique_suffix="lock",
     ),
     ZeehoSensorDescription(
@@ -90,7 +84,8 @@ SENSORS: tuple[ZeehoSensorDescription, ...] = (
     ZeehoSensorDescription(
         key="vehicle_lock",
         name="整车锁定",
-        icon="mdi:lock",
+        icon="mdi:shield-lock-outline",
+        entity_registry_enabled_default=False,
         value_fn=vehicle_lock_value,
         extra_fn=vehicle_lock_attrs,
     ),
@@ -98,7 +93,7 @@ SENSORS: tuple[ZeehoSensorDescription, ...] = (
         key="seat_lock",
         name="座垫锁",
         icon="mdi:seat",
-        value_fn=lambda data: _map_seat_lock(data.get("seatLockState")),
+        value_fn=lambda data: _map_lock(data.get("seatLockState")),
         extra_fn=lambda data: {"raw": data.get("seatLockState")},
     ),
     ZeehoSensorDescription(
