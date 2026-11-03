@@ -1,0 +1,59 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Zeeho vehicle",
+        "description": "Paste the token from the Zeeho App Authorization header (the value after Bearer).",
+        "data": {
+          "token": "Access token"
+        }
+      },
+      "pick_vehicle": {
+        "title": "Select vehicle",
+        "description": "This account has more than one vehicle. Choose which one to add.",
+        "data": {
+          "vin": "Vehicle"
+        }
+      },
+      "manual": {
+        "title": "Enter vehicle manually",
+        "description": "The vehicle list was empty. Enter the VIN by hand.",
+        "data": {
+          "vin": "VIN",
+          "vehicle_name": "Vehicle name"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Zeeho",
+        "description": "The token is no longer valid. Paste a new access token.",
+        "data": {
+          "token": "Access token"
+        }
+      }
+    },
+    "error": {
+      "auth": "Authentication failed. Check the token or VIN.",
+      "cannot_connect": "Could not connect to the server."
+    },
+    "abort": {
+      "already_configured": "This vehicle is already configured.",
+      "reauth_successful": "The token was updated.",
+      "unknown": "Reauthentication could not be completed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update Zeeho token",
+        "description": "Update the token without removing the integration.",
+        "data": {
+          "token": "Access token"
+        }
+      }
+    },
+    "error": {
+      "auth": "Authentication failed. Check the token.",
+      "cannot_connect": "Could not connect to the server."
+    }
+  }
+}

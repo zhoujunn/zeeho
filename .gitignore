@@ -1,0 +1,7 @@
+scripts/.env
+scripts/zeeho_lock.py
+docs/unlock-reversing.md
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
